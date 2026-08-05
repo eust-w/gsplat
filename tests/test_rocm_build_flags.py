@@ -91,3 +91,17 @@ def test_rocm_labeled_partition_uses_tile_local_warp_intrinsics():
     assert "physical_lane - tile_base" in source
     assert "warp.match_any(label)" not in source
     assert "warp.thread_rank()" not in source
+
+
+def test_rocm_warp_any_is_tile_local():
+    utils = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Utils.cuh").read_text()
+    sources = "\n".join(
+        path.read_text()
+        for path in (
+            REPO_ROOT / "gsplat" / "cuda" / "csrc"
+        ).glob("RasterizeToPixels*Bwd.cu")
+    )
+
+    assert "__ballot(predicate) & tile_mask" in utils
+    assert "WARP_ANY(warp, valid)" in sources
+    assert "warp.any(valid)" not in sources

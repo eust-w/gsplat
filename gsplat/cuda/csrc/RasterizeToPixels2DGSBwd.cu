@@ -416,7 +416,7 @@ __global__ void rasterize_to_pixels_2dgs_bwd_kernel(
             }
 
             // if all threads are inactive in this warp, skip this loop
-            if (!warp.any(valid)) {
+            if (!WARP_ANY(warp, valid)) {
                 continue;
             }
 

@@ -215,8 +215,21 @@ inline __device__ LabeledGroup labeled_partition_compat(WarpT &warp, LabelT labe
     return g;
 }
 #define LABELED_PARTITION(warp, label) labeled_partition_compat(warp, label)
+
+template <class WarpT>
+inline __device__ bool warp_any_compat(WarpT &warp, bool predicate) {
+    // All call sites use tiled_partition<32>. Restrict the wave ballot to the
+    // caller's tile so the two halves of a wave64 cannot affect each other.
+    (void)warp;
+    const uint32_t physical_lane = __lane_id();
+    const uint32_t tile_base = (physical_lane / 32) * 32;
+    const unsigned long long tile_mask = 0xffffffffull << tile_base;
+    return (__ballot(predicate) & tile_mask) != 0;
+}
+#define WARP_ANY(warp, predicate) warp_any_compat(warp, predicate)
 #else
 #define LABELED_PARTITION(warp, label) cg::labeled_partition(warp, label)
+#define WARP_ANY(warp, predicate) warp.any(predicate)
 #endif
 
 template <class T, class WarpT> inline __device__ T warpReduceSum(T val, WarpT &warp) {
