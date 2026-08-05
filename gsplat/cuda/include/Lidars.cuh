@@ -170,7 +170,8 @@ public:
         // |z| <= 1 mathematically, but FP rounding (especially under fast math)
         // can push the value past 1.0 by an ULP, making asin return NaN.
         const float elevation = std::asin(std::clamp(ray_normalized.z, -1.f, 1.f));
-        const float azimuth = std::atan2(ray_normalized.y, ray_normalized.x);
+        const float azimuth =
+            gsplat::gsplat_atan2(ray_normalized.y, ray_normalized.x);
 
         // Image point: [x, y] = [column, row] = [azimuth, elevation] (in scaled angle space)
         const float row = elevation * lidar.ANGLE_TO_PIXEL_SCALING_FACTOR;

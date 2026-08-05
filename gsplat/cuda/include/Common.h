@@ -117,6 +117,11 @@ __host__ __device__ inline float gsplat_atan2(float y, float x)
     return __builtin_atan2f(y, x);
 }
 
+__host__ __device__ inline float gsplat_sqrt(float x)
+{
+    return __builtin_sqrtf(x);
+}
+
 __host__ __device__ inline float gsplat_fmod(float numerator, float denominator)
 {
     return __builtin_fmodf(numerator, denominator);
@@ -138,6 +143,11 @@ __device__ inline float gsplat_divide_rn(float numerator, float denominator)
 __host__ __device__ inline float gsplat_atan2(float y, float x)
 {
     return atan2f(y, x);
+}
+
+__host__ __device__ inline float gsplat_sqrt(float x)
+{
+    return sqrtf(x);
 }
 
 __host__ __device__ inline float gsplat_fmod(float numerator, float denominator)

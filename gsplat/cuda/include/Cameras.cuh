@@ -110,7 +110,7 @@ inline __device__ float numerically_stable_norm2(float x, float y) {
         return 0.f;
 
     auto const min_max_ratio = min / max;
-    return max * std::sqrt(1.f + min_max_ratio * min_max_ratio);
+    return max * gsplat::gsplat_sqrt(1.f + min_max_ratio * min_max_ratio);
 }
 
 template <size_t N_COEFFS>
@@ -918,7 +918,7 @@ compute_opencv_fisheye_max_angle(float a, float b, float c) {
         }
         float delta = a * a - 4.0f * b;
         if (delta >= 0.0f) {
-            delta = std::sqrt(delta) - a;
+            delta = gsplat::gsplat_sqrt(delta) - a;
             if (delta > 0.0f) {
                 return 2.0f / delta;
             }
@@ -932,7 +932,7 @@ compute_opencv_fisheye_max_angle(float a, float b, float c) {
         float delta = t1 * t1 + 4.0f * t2 * t2 * t2;
 
         if (delta >= 0.0f) {
-            float d2 = std::sqrt(delta);
+            float d2 = gsplat::gsplat_sqrt(delta);
             float cube_root = std::cbrt((d2 + t1) / 2.0f);
             if (cube_root != 0.0f) {
                 float soln = (cube_root - (t2 / cube_root) - boc) / 3.0f;
@@ -942,10 +942,11 @@ compute_opencv_fisheye_max_angle(float a, float b, float c) {
             }
         } else {
             // Complex root case (delta < 0): 3 real roots
-            float theta = gsplat::gsplat_atan2(std::sqrt(-delta), t1) / 3.0f;
+            float theta =
+                gsplat::gsplat_atan2(gsplat::gsplat_sqrt(-delta), t1) / 3.0f;
             constexpr float two_third_pi = 2.0f * PI / 3.0f;
 
-            float t3 = 2.0f * std::sqrt(-t2);
+            float t3 = 2.0f * gsplat::gsplat_sqrt(-t2);
             float soln = INF;
             for (int i : {-1, 0, 1}) {
                 float angle = theta + i * two_third_pi;
@@ -995,10 +996,10 @@ struct OpenCVFisheyeCameraModel
             max(parameters.resolution[1] - parameters.principal_point[1],
                 parameters.principal_point[1]);
         auto const max_radius_pixels =
-            std::sqrt(max_diag_x * max_diag_x + max_diag_y * max_diag_y);
+            gsplat::gsplat_sqrt(max_diag_x * max_diag_x + max_diag_y * max_diag_y);
 
         if (k4 == 0) {
-            max_angle = std::sqrt(
+            max_angle = gsplat::gsplat_sqrt(
                 compute_opencv_fisheye_max_angle(3.f * k1, 5.f * k2, 7.f * k3)
             );
         } else {
@@ -1392,7 +1393,7 @@ inline __device__ auto world_gaussian_sigma_points(
 #pragma unroll
     for (auto i = 0u; i < D; ++i) {
         auto const delta =
-            std::sqrt(D + lambda) * gaussian_world_scale[i] * R[i];
+            gsplat::gsplat_sqrt(D + lambda) * gaussian_world_scale[i] * R[i];
         // "m + sqrt((n+lambda)*C)_i"
         ret.points[i + 1] = gaussian_world_mean + delta;
         // "m - sqrt((n+lambda)*C)_i"

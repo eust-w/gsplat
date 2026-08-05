@@ -172,6 +172,20 @@ def test_camera_atan2_uses_hipify_safe_compatibility_name():
     assert "atan2f(" not in source
 
 
+def test_camera_device_sqrt_uses_hipify_safe_compatibility_name():
+    source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Cameras.cuh").read_text()
+
+    assert source.count("gsplat::gsplat_sqrt(") == 8
+    assert re.search(r"^(?!\s*//).*std::sqrt\(", source, re.MULTILINE) is None
+
+
+def test_lidar_atan2_uses_hipify_safe_compatibility_name():
+    source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Lidars.cuh").read_text()
+
+    assert "gsplat::gsplat_atan2(ray_normalized.y, ray_normalized.x)" in source
+    assert "std::atan2(" not in source
+
+
 def test_lidar_fmod_uses_float_device_builtin():
     common = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Common.h").read_text()
     source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Lidars.cuh").read_text()
