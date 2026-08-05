@@ -105,3 +105,10 @@ def test_rocm_warp_any_is_tile_local():
     assert "__ballot(predicate) & tile_mask" in utils
     assert "WARP_ANY(warp, valid)" in sources
     assert "warp.any(valid)" not in sources
+
+
+def test_adam_uses_linkable_float_sqrt_on_hip():
+    source = (REPO_ROOT / "gsplat" / "cuda" / "csrc" / "AdamCUDA.cu").read_text()
+
+    assert "sqrtf(register_exp_avg_sq)" in source
+    assert "sqrt(register_exp_avg_sq)" not in source

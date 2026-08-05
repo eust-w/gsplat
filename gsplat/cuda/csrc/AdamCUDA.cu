@@ -61,7 +61,10 @@ __global__ void adam_kernel(
     register_exp_avg_sq = b2 * register_exp_avg_sq + (1.0f - b2) *
                                                          register_param_grad *
                                                          register_param_grad;
-    float step = -lr * register_exp_avg / (sqrt(register_exp_avg_sq) + eps);
+    // Keep the device call on the float overload. ROCm's HIP link path does
+    // not provide the unresolved C++ `sqrt(float)` symbol emitted for the
+    // unqualified overload, while both CUDA and HIP expose `sqrtf` directly.
+    float step = -lr * register_exp_avg / (sqrtf(register_exp_avg_sq) + eps);
 
     param[p_idx] += step;
     exp_avg[p_idx] = register_exp_avg;
