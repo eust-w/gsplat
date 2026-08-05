@@ -16,6 +16,7 @@
  */
 
 #include "Config.h"
+#include "Utils.cuh"
 
 #if GSPLAT_BUILD_LOSSES
 
@@ -67,7 +68,7 @@ __global__ void gaussian_losses_fwd_kernel(
 
     // out_of_bound_loss: relu(|positions| - cuboid_dims / 2)
     for (int d = 0; d < 3; d++) {
-        const scalar_t abs_pos = abs(positions[idx3 + d]);
+        const scalar_t abs_pos = gsplat_abs(positions[idx3 + d]);
         const scalar_t half_dim = cuboid_dims[idx3 + d] * static_cast<scalar_t>(0.5);
         const scalar_t diff = abs_pos - half_dim;
         loss_oob[idx3 + d] = diff > static_cast<scalar_t>(0) ? diff : static_cast<scalar_t>(0);
@@ -124,7 +125,7 @@ __global__ void gaussian_losses_bwd_kernel(
     // d(oob)/d(positions) = (|pos| > half_dim) ? sign(pos) : 0
     for (int d = 0; d < 3; d++) {
         const scalar_t pos = positions[idx3 + d];
-        const scalar_t abs_pos = abs(pos);
+        const scalar_t abs_pos = gsplat_abs(pos);
         const scalar_t half_dim = cuboid_dims[idx3 + d] * static_cast<scalar_t>(0.5);
         if (abs_pos > half_dim) {
             const scalar_t sign = (pos > static_cast<scalar_t>(0)) ? static_cast<scalar_t>(1) : static_cast<scalar_t>(-1);

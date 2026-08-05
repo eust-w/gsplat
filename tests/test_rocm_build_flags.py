@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -114,3 +115,16 @@ def test_adam_uses_compiler_builtin_float_sqrt_on_hip():
     assert "__builtin_sqrtf(register_exp_avg_sq)" in source
     assert "float denom = sqrtf(register_exp_avg_sq);" in source
     assert "sqrt(register_exp_avg_sq)" not in source
+
+
+def test_device_abs_does_not_require_a_runtime_math_symbol():
+    utils = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Utils.cuh").read_text()
+    sources = "\n".join(
+        path.read_text()
+        for path in (REPO_ROOT / "gsplat" / "cuda" / "csrc").glob("*.cu")
+    )
+
+    assert "constexpr T gsplat_abs(T x)" in utils
+    assert "return x < static_cast<T>(0) ? -x : x;" in utils
+    assert re.search(r"(?<!gsplat_)\babs\(positions\[", sources) is None
+    assert re.search(r"(?<!gsplat_)\babs\(v_xy_local\.", sources) is None

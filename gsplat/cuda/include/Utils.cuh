@@ -44,6 +44,15 @@ namespace gstd = std;
 namespace gstd = cuda::std;
 #endif
 
+// Avoid emitting an unresolved device-side abs(float/double) symbol on ROCm
+// toolchains where the host math overloads are visible but not linkable from
+// HIP code. This expression preserves NaN and has no runtime-library call.
+template <typename T>
+__host__ __device__ constexpr T gsplat_abs(T x)
+{
+    return x < static_cast<T>(0) ? -x : x;
+}
+
 // Check whether a floating-point value is effectively zero, using the
 // machine epsilon for the given type.
 template <typename T>
@@ -53,7 +62,7 @@ __host__ __device__ constexpr bool is_near_zero(T x)
         gstd::is_floating_point_v<T>,
         "is_near_zero requires a floating-point type"
     );
-    return abs(x) < gstd::numeric_limits<T>::epsilon();
+    return gsplat_abs(x) < gstd::numeric_limits<T>::epsilon();
 }
 
 ///////////////////////////////

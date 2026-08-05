@@ -604,7 +604,8 @@ __global__ void rasterize_to_pixels_2dgs_bwd_kernel(
                         v_xy_local = {v_G * v_G_ddelx, v_G * v_G_ddely};
                         if (v_means2d_abs != nullptr) {
                             v_xy_abs_local = {
-                                abs(v_xy_local.x), abs(v_xy_local.y)
+                                gsplat_abs(v_xy_local.x),
+                                gsplat_abs(v_xy_local.y)
                             };
                         }
                     }

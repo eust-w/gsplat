@@ -253,7 +253,10 @@ __global__ void rasterize_to_pixels_3dgs_bwd_kernel(
                         v_sigma * (conic.y * delta.x + conic.z * delta.y)
                     };
                     if (v_means2d_abs != nullptr) {
-                        v_xy_abs_local = {abs(v_xy_local.x), abs(v_xy_local.y)};
+                        v_xy_abs_local = {
+                            gsplat_abs(v_xy_local.x),
+                            gsplat_abs(v_xy_local.y)
+                        };
                     }
                     v_opacity_local = vis * v_alpha;
                 }
