@@ -167,7 +167,7 @@ def test_rocm_hipify_global_math_and_precise_division_compatibility():
 def test_camera_atan2_uses_hipify_safe_compatibility_name():
     source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Cameras.cuh").read_text()
 
-    assert source.count("gsplat_atan2(") == 3
+    assert source.count("gsplat::gsplat_atan2(") == 3
     assert "std::atan2(" not in source
     assert "atan2f(" not in source
 

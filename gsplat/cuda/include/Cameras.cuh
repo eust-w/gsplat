@@ -942,7 +942,7 @@ compute_opencv_fisheye_max_angle(float a, float b, float c) {
             }
         } else {
             // Complex root case (delta < 0): 3 real roots
-            float theta = gsplat_atan2(std::sqrt(-delta), t1) / 3.0f;
+            float theta = gsplat::gsplat_atan2(std::sqrt(-delta), t1) / 3.0f;
             constexpr float two_third_pi = 2.0f * PI / 3.0f;
 
             float t3 = 2.0f * std::sqrt(-t2);
@@ -1054,7 +1054,7 @@ struct OpenCVFisheyeCameraModel
         if (cam_ray_xy_norm <= 0.f)
             cam_ray_xy_norm = std::numeric_limits<float>::epsilon();
 
-        auto const theta_full = gsplat_atan2(cam_ray_xy_norm, cam_ray.z);
+        auto const theta_full = gsplat::gsplat_atan2(cam_ray_xy_norm, cam_ray.z);
 
         // Limit angles to max_angle to prevent projected points to leave valid
         // cone around max_angle. In particular for omnidirectional cameras,
@@ -1227,7 +1227,7 @@ public:
         if (cam_ray_xy_norm <= 0.f)
             cam_ray_xy_norm = std::numeric_limits<float>::epsilon();
 
-        auto const theta_full = gsplat_atan2(cam_ray_xy_norm, cam_ray.z);
+        auto const theta_full = gsplat::gsplat_atan2(cam_ray_xy_norm, cam_ray.z);
 
         // Limit angles to max_angle to prevent projected points to leave valid cone around max_angle.
         // In particular for omnidirectional cameras, this prevents points outside the FOV to be
