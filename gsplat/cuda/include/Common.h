@@ -112,7 +112,7 @@ __host__ __device__ inline float ceilf(float x)
     return __builtin_ceilf(x);
 }
 
-__host__ __device__ inline float atan2f(float y, float x)
+__host__ __device__ inline float gsplat_atan2(float y, float x)
 {
     return __builtin_atan2f(y, x);
 }
@@ -125,6 +125,11 @@ __device__ inline float gsplat_divide_rn(float numerator, float denominator)
     return numerator / denominator;
 }
 #else
+__host__ __device__ inline float gsplat_atan2(float y, float x)
+{
+    return atan2f(y, x);
+}
+
 __device__ inline float gsplat_divide_rn(float numerator, float denominator)
 {
     return __fdiv_rn(numerator, denominator);

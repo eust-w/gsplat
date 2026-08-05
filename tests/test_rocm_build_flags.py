@@ -144,6 +144,7 @@ def test_rocm_device_math_compatibility_is_scoped_to_gsplat():
     assert "return __builtin_log2f(x);" in common
     assert "return __builtin_floorf(x);" in common
     assert "return __builtin_ceilf(x);" in common
+    assert "inline float gsplat_atan2(float y, float x)" in common
     assert "return __builtin_atan2f(y, x);" in common
 
 
@@ -161,6 +162,14 @@ def test_rocm_hipify_global_math_and_precise_division_compatibility():
     assert "return __fdiv_rn(numerator, denominator);" in common
     assert lidar.count("gsplat_divide_rn(") == 3
     assert "__fdiv_rn(" not in lidar
+
+
+def test_camera_atan2_uses_hipify_safe_compatibility_name():
+    source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Cameras.cuh").read_text()
+
+    assert source.count("gsplat_atan2(") == 2
+    assert "std::atan2(" not in source
+    assert "atan2f(" not in source
 
 
 def test_intersection_host_bit_width_avoids_device_math_overloads():
