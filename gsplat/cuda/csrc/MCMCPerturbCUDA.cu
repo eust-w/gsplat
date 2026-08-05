@@ -20,11 +20,11 @@
 namespace gsplat {
 
 inline __device__ float sigmoid_standard(float x) {
-    return 1.f / (1.f + expf(-x));
+    return 1.f / (1.f + gsplat_exp(-x));
 }
 
 inline __device__ float sigmoid_steep(float x, float k, float x0) {
-    return 1.f / (1.f + expf(-k * (x - x0)));
+    return 1.f / (1.f + gsplat_exp(-k * (x - x0)));
 }
 
 __global__ void mcmc_perturb_positions_kernel(
@@ -43,7 +43,7 @@ __global__ void mcmc_perturb_positions_kernel(
 
     vec4 quat = glm::make_vec4(quats + idx * 4);
     vec3 scale = glm::make_vec3(scales_log + idx * 3);
-    scale = vec3(expf(scale.x), expf(scale.y), expf(scale.z));
+    scale = vec3(gsplat_exp(scale.x), gsplat_exp(scale.y), gsplat_exp(scale.z));
 
     mat3 covar;
     quat_scale_to_covar_preci(quat, scale, &covar, nullptr);

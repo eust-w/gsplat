@@ -182,6 +182,18 @@ def test_lidar_fmod_uses_float_device_builtin():
     assert "std::fmod(" not in source
 
 
+def test_mcmc_exp_uses_float_device_builtin():
+    common = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Common.h").read_text()
+    source = (
+        REPO_ROOT / "gsplat" / "cuda" / "csrc" / "MCMCPerturbCUDA.cu"
+    ).read_text()
+
+    assert "inline float gsplat_exp(float x)" in common
+    assert "return __builtin_expf(x);" in common
+    assert source.count("gsplat_exp(") == 5
+    assert "expf(" not in source
+
+
 def test_intersection_host_bit_width_avoids_device_math_overloads():
     source = (REPO_ROOT / "gsplat" / "cuda" / "csrc" / "IntersectTile.cu").read_text()
 
