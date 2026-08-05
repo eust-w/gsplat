@@ -183,7 +183,11 @@ inline __device__ LabeledGroup labeled_partition_compat(WarpT &warp, LabelT labe
     // wave mask to tile-local bits. The normalization matters for the upper
     // 32-lane tile of a wave64 CDNA wave; __shfl(..., width=32) expects a
     // source lane in [0, 31].
-    const uint32_t tile_size = warp.size();
+    // Every gsplat call site passes cg::tiled_partition<32>. Avoid querying
+    // warp.size(): ROCm 7.2's thread_block_tile inherits two size() members,
+    // which makes the otherwise valid call ambiguous under Clang 22.
+    (void)warp;
+    constexpr uint32_t tile_size = 32;
     const uint32_t physical_lane = __lane_id();
     const uint32_t tile_base = (physical_lane / tile_size) * tile_size;
     const unsigned long long tile_mask =
