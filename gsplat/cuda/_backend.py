@@ -22,17 +22,25 @@ VERBOSE=1 DEBUG=1 TORCH_CUDA_ARCH_LIST="8.9" python -c "from gsplat.cuda._backen
 
 import os
 from subprocess import DEVNULL, call
+import torch
 import torch.utils.cpp_extension as jit
 from .build import build_and_load_gsplat
 from rich.console import Console
 
 
 def cuda_toolkit_available():
-    """
-    Check more robustly if the CUDA toolkit is available.
-    1. Attempt to locate `CUDA_HOME` using PyTorch’s internal method.
-    2. Check if nvcc is present in that location.
-    """
+    """Return True when a usable CUDA or ROCm toolkit is discoverable."""
+    if torch.version.hip:
+        rocm_home = getattr(jit, "ROCM_HOME", None)
+        if rocm_home and os.path.isfile(os.path.join(rocm_home, "bin", "hipcc")):
+            return True
+        try:
+            return call(
+                ["hipcc", "--version"], stdout=DEVNULL, stderr=DEVNULL
+            ) == 0
+        except OSError:
+            return False
+
     cuda_home = jit._find_cuda_home()  # This tries various heuristics
     if not cuda_home:
         return False
@@ -60,7 +68,8 @@ except ImportError:
         _C = build_and_load_gsplat()
     else:
         Console().print(
-            "[yellow]gsplat: No CUDA toolkit found. gsplat will be disabled.[/yellow]"
+            "[yellow]gsplat: No CUDA or ROCm toolkit found. "
+            "gsplat will be disabled.[/yellow]"
         )
 
 __all__ = ["_C"]
