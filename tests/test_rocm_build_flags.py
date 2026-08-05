@@ -126,5 +126,6 @@ def test_device_abs_does_not_require_a_runtime_math_symbol():
 
     assert "constexpr T gsplat_abs(T x)" in utils
     assert "return x < static_cast<T>(0) ? -x : x;" in utils
+    assert "constexpr T gaussian_abs(T x)" in sources
     assert re.search(r"(?<!gsplat_)\babs\(positions\[", sources) is None
     assert re.search(r"(?<!gsplat_)\babs\(v_xy_local\.", sources) is None
