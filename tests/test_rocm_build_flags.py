@@ -172,6 +172,16 @@ def test_camera_atan2_uses_hipify_safe_compatibility_name():
     assert "atan2f(" not in source
 
 
+def test_lidar_fmod_uses_float_device_builtin():
+    common = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Common.h").read_text()
+    source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Lidars.cuh").read_text()
+
+    assert "inline float gsplat_fmod(float numerator, float denominator)" in common
+    assert "return __builtin_fmodf(numerator, denominator);" in common
+    assert "gsplat::gsplat_fmod(rel_angle, period)" in source
+    assert "std::fmod(" not in source
+
+
 def test_intersection_host_bit_width_avoids_device_math_overloads():
     source = (REPO_ROOT / "gsplat" / "cuda" / "csrc" / "IntersectTile.cu").read_text()
 

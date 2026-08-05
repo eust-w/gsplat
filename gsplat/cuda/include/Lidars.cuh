@@ -279,7 +279,7 @@ public:
         else
         {
             // Slow path: use fmod for values outside the fast range
-            rel_angle = std::fmod(rel_angle, period);
+            rel_angle = gsplat::gsplat_fmod(rel_angle, period);
             // output range [0, period)
             return (rel_angle < 0.f) ? (rel_angle + period) : rel_angle;
         }
