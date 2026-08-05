@@ -40,6 +40,44 @@ template <typename T> inline const T &max(const T &a, const T &b) {
 
 namespace gsplat {
 
+// ROCm 7.2's Clang device pass does not expose CUDA's unqualified min/max and
+// reciprocal-square-root overloads when PyTorch extensions are built through
+// the compiler driver. Keep those CUDA-compatible spellings local to gsplat
+// and lower the floating-point operations directly to Clang builtins.
+#if defined(USE_ROCM) && defined(__HIP_DEVICE_COMPILE__)
+template <typename T>
+__device__ constexpr T min(T a, T b)
+{
+    return b < a ? b : a;
+}
+
+template <typename T>
+__device__ constexpr T max(T a, T b)
+{
+    return a < b ? b : a;
+}
+
+__device__ inline float sqrt(float x)
+{
+    return __builtin_sqrtf(x);
+}
+
+__device__ inline float sqrtf(float x)
+{
+    return __builtin_sqrtf(x);
+}
+
+__device__ inline float rsqrt(float x)
+{
+    return 1.0f / __builtin_sqrtf(x);
+}
+
+__device__ inline float rsqrtf(float x)
+{
+    return 1.0f / __builtin_sqrtf(x);
+}
+#endif
+
 //
 // Some Macros.
 //

@@ -129,3 +129,13 @@ def test_device_abs_does_not_require_a_runtime_math_symbol():
     assert "constexpr T gaussian_abs(T x)" in sources
     assert re.search(r"(?<!gsplat_)\babs\(positions\[", sources) is None
     assert re.search(r"(?<!gsplat_)\babs\(v_xy_local\.", sources) is None
+
+
+def test_rocm_device_math_compatibility_is_scoped_to_gsplat():
+    common = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Common.h").read_text()
+
+    assert "defined(USE_ROCM) && defined(__HIP_DEVICE_COMPILE__)" in common
+    assert "__device__ constexpr T min(T a, T b)" in common
+    assert "__device__ constexpr T max(T a, T b)" in common
+    assert "return __builtin_sqrtf(x);" in common
+    assert "return 1.0f / __builtin_sqrtf(x);" in common
