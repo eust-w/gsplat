@@ -139,13 +139,15 @@ inline __device__ void covarW2C_VJP(
 // HIP's cooperative_groups has no cg::labeled_partition (used by the packed /
 // fused projection backward to coalesce per-gaussian/per-camera gradient atomics
 // so each distinct label does ONE atomicAdd instead of one per lane). Rebuild it
-// from match_any: LabeledGroup holds the 64-bit mask of same-label lanes; its
+// from ballot/shuffle: LabeledGroup holds the 64-bit mask of same-label lanes; its
 // reduction sums only those lanes and only the lowest such lane (thread_rank==0)
 // issues the atomic. This matches the CUDA atomic count -- important because
 // v_viewmats/v_R/v_t are summed over many gaussians and a per-lane atomic fan-out
 // adds enough float accumulation-order noise to exceed the tests' tight gradient
 // tolerances. LABELED_PARTITION dispatches here on HIP, cg::labeled_partition on
-// CUDA, leaving the call sites unchanged.
+// CUDA, leaving the call sites unchanged. Some ROCm releases expose neither
+// cooperative_groups::match_any nor __match_any_sync, so construct the mask
+// from portable HIP ballot/shuffle intrinsics.
 struct LabeledGroup {
     unsigned long long mask;
     uint32_t lane;
@@ -198,8 +200,17 @@ inline __device__ LabeledGroup labeled_partition_compat(WarpT &warp, LabelT labe
     // active physical lanes, and still lets us isolate either half of a
     // wave64 below.
     const unsigned long long active_tile_mask = __ballot(1) & tile_mask;
-    g.mask = (__match_any_sync(active_tile_mask, label) & active_tile_mask) >>
-             tile_base;
+    const unsigned long long active_local_mask = active_tile_mask >> tile_base;
+    unsigned long long remaining = active_local_mask;
+    g.mask = 0;
+    while (remaining) {
+        const int src = __ffsll((long long)remaining) - 1;
+        const LabelT src_label = __shfl(label, src, 32);
+        if (src_label == label) {
+            g.mask |= 1ull << src;
+        }
+        remaining &= remaining - 1;
+    }
     g.lane = physical_lane - tile_base;
     return g;
 }

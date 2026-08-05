@@ -82,7 +82,8 @@ def test_rocm_cdna_keeps_wave64_default(monkeypatch):
 def test_rocm_labeled_partition_uses_tile_local_warp_intrinsics():
     source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Utils.cuh").read_text()
 
-    assert "__match_any_sync(active_tile_mask, label)" in source
+    assert "const LabelT src_label = __shfl(label, src, 32)" in source
+    assert "__match_any_sync" not in source
     assert "__ballot(1) & tile_mask" in source
     assert "active_tile_mask = __activemask()" not in source
     assert "constexpr uint32_t tile_size = 32" in source
