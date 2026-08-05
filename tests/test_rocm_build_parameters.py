@@ -77,6 +77,7 @@ def test_rocm_build_uses_clang_flags_and_cuda_header_path(monkeypatch, hip):
     assert "-diag-suppress" not in parameters.extra_cuda_cflags
     assert "-use_fast_math" not in parameters.extra_cuda_cflags
     assert "-ffast-math" in parameters.extra_cuda_cflags
+    assert "-D__CLANG_CUDA_COMPLEX_BUILTINS=1" in parameters.extra_cuda_cflags
     assert "-DUSE_ROCM" in parameters.extra_cflags
 
 
@@ -88,3 +89,24 @@ def test_cuda_build_keeps_nvcc_flags(monkeypatch):
     assert "-diag-suppress" in parameters.extra_cuda_cflags
     assert "-use_fast_math" in parameters.extra_cuda_cflags
     assert "-ffast-math" not in parameters.extra_cuda_cflags
+    assert "-D__CLANG_CUDA_COMPLEX_BUILTINS=1" not in parameters.extra_cuda_cflags
+
+
+def test_rocm_build_mirrors_glm_inl_files_for_hipify(monkeypatch, tmp_path):
+    module = _load_build_module(monkeypatch, hip="7.2")
+    cuda_path = tmp_path / "gsplat" / "cuda"
+    source = cuda_path / "csrc" / "third_party" / "glm" / "glm" / "detail"
+    source.mkdir(parents=True)
+    (source / "type_vec.inl").write_text("implementation\n", encoding="utf-8")
+    (source / "type_vec.hpp").write_text("header\n", encoding="utf-8")
+    module.PATH = str(cuda_path)
+
+    module._prepare_rocm_glm_for_hipify()
+
+    mirrored = (
+        tmp_path / "gsplat" / "hip" / "csrc" / "third_party" / "glm" / "glm" / "detail"
+    )
+    assert (mirrored / "type_vec.inl").read_text(encoding="utf-8") == (
+        "implementation\n"
+    )
+    assert not (mirrored / "type_vec.hpp").exists()

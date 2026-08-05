@@ -95,6 +95,37 @@ def format_jit_cuda_cflags(cuda_cflags):
     ]
 
 
+def _prepare_rocm_glm_for_hipify():
+    """Mirror GLM ``.inl`` files omitted by PyTorch's JIT hipifier.
+
+    PyTorch hipifies headers below ``extra_include_paths`` into a sibling
+    ``hip`` tree, but its default header extension list does not include
+    GLM's implementation ``.inl`` files.  The rewritten GLM headers then
+    include files that do not exist in that tree.  Copy only those opaque
+    implementation files before ``jit.load``; PyTorch remains responsible
+    for translating CUDA-aware sources and headers.
+    """
+    if torch.version.hip is None:
+        return
+
+    source_root = os.path.join(PATH, "csrc", "third_party", "glm")
+    destination_root = os.path.join(
+        os.path.dirname(PATH), "hip", "csrc", "third_party", "glm"
+    )
+    if not os.path.isdir(source_root):
+        return
+
+    for root, _, filenames in os.walk(source_root):
+        for filename in filenames:
+            if not filename.endswith(".inl"):
+                continue
+            source = os.path.join(root, filename)
+            relative = os.path.relpath(source, source_root)
+            destination = os.path.join(destination_root, relative)
+            os.makedirs(os.path.dirname(destination), exist_ok=True)
+            shutil.copy2(source, destination)
+
+
 def get_build_parameters():
     name = "gsplat_cuda"
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -238,6 +269,9 @@ def get_build_parameters():
         # USE_ROCM was added to later versions of PyTorch.
         # Define here to support older PyTorch versions as well:
         extra_cflags += ["-DUSE_ROCM", "-U__HIP_NO_HALF_CONVERSIONS__"]
+        # Clang's CUDA compatibility wrappers use this opt-in for the
+        # complex-number min/max helpers referenced by HIP headers.
+        extra_cuda_cflags += ["-D__CLANG_CUDA_COMPLEX_BUILTINS=1"]
     else:
         extra_cuda_cflags += ["--expt-relaxed-constexpr"]
 
@@ -459,6 +493,7 @@ def build_and_load_gsplat():
         # But it's ok so we catch this exception and ignore it.
         envvars_to_remove = []
         try:
+            _prepare_rocm_glm_for_hipify()
             if not NINJA_STATUS:
                 envvars_to_remove.append("NINJA_STATUS")
                 os.environ["NINJA_STATUS"] = "[%f/%t %r %es] "
