@@ -44,70 +44,70 @@ namespace gsplat {
 // reciprocal-square-root overloads when PyTorch extensions are built through
 // the compiler driver. Keep those CUDA-compatible spellings local to gsplat
 // and lower the floating-point operations directly to Clang builtins.
-#if defined(USE_ROCM) && defined(__HIP_DEVICE_COMPILE__)
+#if defined(USE_ROCM)
 template <typename T, typename U>
-__device__ constexpr auto min(T a, U b)
+__host__ __device__ constexpr auto min(T a, U b)
 {
     return b < a ? b : a;
 }
 
 template <typename T, typename U>
-__device__ constexpr auto max(T a, U b)
+__host__ __device__ constexpr auto max(T a, U b)
 {
     return a < b ? b : a;
 }
 
-__device__ inline float fminf(float a, float b)
+__host__ __device__ inline float fminf(float a, float b)
 {
     return b < a ? b : a;
 }
 
-__device__ inline float sqrt(float x)
+__host__ __device__ inline float sqrt(float x)
 {
     return __builtin_sqrtf(x);
 }
 
-__device__ inline float sqrtf(float x)
+__host__ __device__ inline float sqrtf(float x)
 {
     return __builtin_sqrtf(x);
 }
 
-__device__ inline float rsqrt(float x)
+__host__ __device__ inline float rsqrt(float x)
 {
     return 1.0f / __builtin_sqrtf(x);
 }
 
-__device__ inline float rsqrtf(float x)
+__host__ __device__ inline float rsqrtf(float x)
 {
     return 1.0f / __builtin_sqrtf(x);
 }
 
-__device__ inline float __logf(float x)
+__host__ __device__ inline float __logf(float x)
 {
     return __builtin_logf(x);
 }
 
-__device__ inline float log2f(float x)
+__host__ __device__ inline float log2f(float x)
 {
     return __builtin_log2f(x);
 }
 
-__device__ inline float floor(float x)
+__host__ __device__ inline float floor(float x)
 {
     return __builtin_floorf(x);
 }
 
-__device__ inline float floorf(float x)
+__host__ __device__ inline float floorf(float x)
 {
     return __builtin_floorf(x);
 }
 
-__device__ inline float ceil(float x)
+__host__ __device__ inline float ceil(float x)
 {
     return __builtin_ceilf(x);
 }
 
-__device__ inline float ceilf(float x)
+__host__ __device__ inline float ceilf(float x)
 {
     return __builtin_ceilf(x);
 }
