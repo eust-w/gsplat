@@ -207,6 +207,29 @@ def get_build_parameters():
         # USE_ROCM was added to later versions of PyTorch.
         # Define here to support older PyTorch versions as well:
         extra_cflags += ["-DUSE_ROCM", "-U__HIP_NO_HALF_CONVERSIONS__"]
+        # ROCm Clang's CUDA compatibility wrappers guard the complex-number
+        # min/max builtins used by current HIP headers behind this opt-in.
+        extra_cuda_cflags += [
+            "-D__CLANG_CUDA_COMPLEX_BUILTINS=1",
+            # PyTorch's HIP extension defaults hide half operators that current
+            # rocPRIM/hipCUB headers instantiate, so restore them locally.
+            "-U__HIP_NO_HALF_OPERATORS__",
+            "-U__HIP_NO_HALF2_OPERATORS__",
+            # ROCm 7.2 rocPRIM still spells its precondition helper using the
+            # legacy HIP macro, while newer Clang headers expose plain assert.
+            "-D__hip_assert=assert",
+            # hipCUB 4.2.0 has four deprecated BF16 SIMD placeholders whose
+            # bodies are parsed even though gsplat does not use BF16. The
+            # matching compatibility header makes this a narrow opt-out.
+            "-DHIPCUB_DISABLE_BFLOAT16_SIMD_OPERATORS=1",
+        ]
+        # RDNA targets use 32-lane wavefronts, while rocPRIM's compatibility
+        # headers otherwise assume the wave64 default used by CDNA.  PyTorch
+        # accepts a semicolon-separated architecture list here, so enable the
+        # macro whenever any requested target is gfx10/gfx11/gfx12.
+        rocm_arches = os.getenv("PYTORCH_ROCM_ARCH", "").split(";")
+        if any(arch.startswith(("gfx10", "gfx11", "gfx12")) for arch in rocm_arches):
+            extra_cuda_cflags += ["-D__AMDGCN_WAVEFRONT_SIZE=32"]
         # 3DGUT's cuda::std::optional comes from ROCm/libhipcxx (header-only). Add
         # its include/ to the device-compile flags so <cuda/std/*> resolves under
         # hipcc. NVIDIA gets cuda::std from the CUDA toolkit, so this is ROCm-only.
