@@ -77,3 +77,12 @@ def test_rocm_cdna_keeps_wave64_default(monkeypatch):
     ).get_build_parameters()
 
     assert "-D__AMDGCN_WAVEFRONT_SIZE=32" not in parameters.extra_cuda_cflags
+
+
+def test_rocm_labeled_partition_uses_tile_local_warp_intrinsics():
+    source = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Utils.cuh").read_text()
+
+    assert "__match_any_sync(active_tile_mask, label)" in source
+    assert "physical_lane - tile_base" in source
+    assert "warp.match_any(label)" not in source
+    assert "warp.thread_rank()" not in source

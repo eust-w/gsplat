@@ -177,8 +177,22 @@ struct LabeledGroup {
 template <class WarpT, class LabelT>
 inline __device__ LabeledGroup labeled_partition_compat(WarpT &warp, LabelT label) {
     LabeledGroup g;
-    g.mask = warp.match_any(label);
-    g.lane = warp.thread_rank();
+    // HIP's thread_block_tile<32> has different cooperative_groups bases
+    // across ROCm releases: match_any can be absent and thread_rank can be
+    // ambiguous. Use the stable warp intrinsics and normalize the physical
+    // wave mask to tile-local bits. The normalization matters for the upper
+    // 32-lane tile of a wave64 CDNA wave; __shfl(..., width=32) expects a
+    // source lane in [0, 31].
+    const uint32_t tile_size = warp.size();
+    const uint32_t physical_lane = __lane_id();
+    const uint32_t tile_base = (physical_lane / tile_size) * tile_size;
+    const unsigned long long tile_mask =
+        tile_size == 64 ? ~0ull
+                        : ((1ull << tile_size) - 1ull) << tile_base;
+    const unsigned long long active_tile_mask = __activemask() & tile_mask;
+    g.mask = (__match_any_sync(active_tile_mask, label) & active_tile_mask) >>
+             tile_base;
+    g.lane = physical_lane - tile_base;
     return g;
 }
 #define LABELED_PARTITION(warp, label) labeled_partition_compat(warp, label)
