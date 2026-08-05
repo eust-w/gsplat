@@ -1054,7 +1054,7 @@ struct OpenCVFisheyeCameraModel
         if (cam_ray_xy_norm <= 0.f)
             cam_ray_xy_norm = std::numeric_limits<float>::epsilon();
 
-        auto const theta_full = std::atan2(cam_ray_xy_norm, cam_ray.z);
+        auto const theta_full = gsplat_atan2(cam_ray_xy_norm, cam_ray.z);
 
         // Limit angles to max_angle to prevent projected points to leave valid
         // cone around max_angle. In particular for omnidirectional cameras,
