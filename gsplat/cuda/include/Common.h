@@ -91,6 +91,26 @@ __device__ inline float log2f(float x)
 {
     return __builtin_log2f(x);
 }
+
+__device__ inline float floor(float x)
+{
+    return __builtin_floorf(x);
+}
+
+__device__ inline float floorf(float x)
+{
+    return __builtin_floorf(x);
+}
+
+__device__ inline float ceil(float x)
+{
+    return __builtin_ceilf(x);
+}
+
+__device__ inline float ceilf(float x)
+{
+    return __builtin_ceilf(x);
+}
 #endif
 
 //

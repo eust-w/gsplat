@@ -142,3 +142,5 @@ def test_rocm_device_math_compatibility_is_scoped_to_gsplat():
     assert "return 1.0f / __builtin_sqrtf(x);" in common
     assert "return __builtin_logf(x);" in common
     assert "return __builtin_log2f(x);" in common
+    assert "return __builtin_floorf(x);" in common
+    assert "return __builtin_ceilf(x);" in common
