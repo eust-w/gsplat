@@ -107,8 +107,10 @@ def test_rocm_warp_any_is_tile_local():
     assert "warp.any(valid)" not in sources
 
 
-def test_adam_uses_linkable_float_sqrt_on_hip():
+def test_adam_uses_compiler_builtin_float_sqrt_on_hip():
     source = (REPO_ROOT / "gsplat" / "cuda" / "csrc" / "AdamCUDA.cu").read_text()
 
-    assert "sqrtf(register_exp_avg_sq)" in source
+    assert "#if defined(USE_ROCM)" in source
+    assert "__builtin_sqrtf(register_exp_avg_sq)" in source
+    assert "float denom = sqrtf(register_exp_avg_sq);" in source
     assert "sqrt(register_exp_avg_sq)" not in source
