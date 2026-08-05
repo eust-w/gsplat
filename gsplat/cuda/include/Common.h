@@ -45,16 +45,21 @@ namespace gsplat {
 // the compiler driver. Keep those CUDA-compatible spellings local to gsplat
 // and lower the floating-point operations directly to Clang builtins.
 #if defined(USE_ROCM) && defined(__HIP_DEVICE_COMPILE__)
-template <typename T>
-__device__ constexpr T min(T a, T b)
+template <typename T, typename U>
+__device__ constexpr auto min(T a, U b)
 {
     return b < a ? b : a;
 }
 
-template <typename T>
-__device__ constexpr T max(T a, T b)
+template <typename T, typename U>
+__device__ constexpr auto max(T a, U b)
 {
     return a < b ? b : a;
+}
+
+__device__ inline float fminf(float a, float b)
+{
+    return b < a ? b : a;
 }
 
 __device__ inline float sqrt(float x)
@@ -75,6 +80,16 @@ __device__ inline float rsqrt(float x)
 __device__ inline float rsqrtf(float x)
 {
     return 1.0f / __builtin_sqrtf(x);
+}
+
+__device__ inline float __logf(float x)
+{
+    return __builtin_logf(x);
+}
+
+__device__ inline float log2f(float x)
+{
+    return __builtin_log2f(x);
 }
 #endif
 
