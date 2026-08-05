@@ -189,7 +189,11 @@ inline __device__ LabeledGroup labeled_partition_compat(WarpT &warp, LabelT labe
     const unsigned long long tile_mask =
         tile_size == 64 ? ~0ull
                         : ((1ull << tile_size) - 1ull) << tile_base;
-    const unsigned long long active_tile_mask = __activemask() & tile_mask;
+    // HIP does not expose CUDA's __activemask() on all supported ROCm
+    // releases.  __ballot(1) is the portable HIP spelling for the currently
+    // active physical lanes, and still lets us isolate either half of a
+    // wave64 below.
+    const unsigned long long active_tile_mask = __ballot(1) & tile_mask;
     g.mask = (__match_any_sync(active_tile_mask, label) & active_tile_mask) >>
              tile_base;
     g.lane = physical_lane - tile_base;
