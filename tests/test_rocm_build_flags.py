@@ -144,6 +144,23 @@ def test_rocm_device_math_compatibility_is_scoped_to_gsplat():
     assert "return __builtin_log2f(x);" in common
     assert "return __builtin_floorf(x);" in common
     assert "return __builtin_ceilf(x);" in common
+    assert "return __builtin_atan2f(y, x);" in common
+
+
+def test_rocm_hipify_global_math_and_precise_division_compatibility():
+    common = (REPO_ROOT / "gsplat" / "cuda" / "include" / "Common.h").read_text()
+    lidar = (
+        REPO_ROOT / "gsplat" / "cuda" / "csrc" / "IntersectTileLidar.cu"
+    ).read_text()
+
+    assert "where hipify expects to find them" in common
+    assert "__host__ __device__ constexpr auto min(T a, U b)" in common
+    assert "__host__ __device__ constexpr auto max(T a, U b)" in common
+    assert "__device__ inline float gsplat_divide_rn" in common
+    assert "#pragma clang fp reciprocal(off)" in common
+    assert "return __fdiv_rn(numerator, denominator);" in common
+    assert lidar.count("gsplat_divide_rn(") == 3
+    assert "__fdiv_rn(" not in lidar
 
 
 def test_intersection_host_bit_width_avoids_device_math_overloads():

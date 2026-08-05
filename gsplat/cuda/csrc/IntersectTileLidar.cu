@@ -87,7 +87,7 @@ namespace {
         // NOTE: need to use proper fdiv instead of the approximation enabled with -use_fast_math
         // So that if pix_az == fov_span_pix_az, the index is exactly cdf_resolution.
         // It also makes the results match the reference implementation.
-        int idx = static_cast<int>(RoundFn(__fdiv_rn(pix_az, fov_span_pix_az) * cdf_resolution));
+        int idx = static_cast<int>(RoundFn(gsplat_divide_rn(pix_az, fov_span_pix_az) * cdf_resolution));
         assert(0 <= idx);
         assert(idx <= cdf_resolution);
         return idx;
@@ -96,7 +96,7 @@ namespace {
     template <auto RoundFn>
     __device__ int sample_dense_el(float pix_el, float fov_span_pix_el, int cdf_resolution)
     {
-        int idx = static_cast<int>(RoundFn(__fdiv_rn(pix_el, fov_span_pix_el) * cdf_resolution));
+        int idx = static_cast<int>(RoundFn(gsplat_divide_rn(pix_el, fov_span_pix_el) * cdf_resolution));
         assert(0 <= idx);
         assert(idx <= cdf_resolution);
         return idx;
@@ -105,7 +105,7 @@ namespace {
     template <auto RoundFn>
     __device__ int sample_tile_az(float pix_az, float fov_span_pix_az, int n_bins)
     {
-        int idx = static_cast<int>(RoundFn(__fdiv_rn(pix_az, fov_span_pix_az) * n_bins));
+        int idx = static_cast<int>(RoundFn(gsplat_divide_rn(pix_az, fov_span_pix_az) * n_bins));
         assert(0 <= idx);
         assert(idx <= n_bins);
         return idx;

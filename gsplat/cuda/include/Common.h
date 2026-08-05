@@ -24,17 +24,17 @@
 #include <glm/glm.hpp>
 
 // torch's hipify rewrites std::min/std::max to the global ::min/::max (the CUDA
-// device spelling). On the HIP device pass those are builtins, but on the HIP
-// host pass (plain g++, no hip_runtime) global ::min/::max do not exist, so
-// host TUs including these headers fail to compile. Provide host-only global
-// forwards to std::min/std::max for the host pass; the device pass keeps the
-// HIP builtins, and CUDA is unaffected (USE_ROCM undefined there).
-#if defined(USE_ROCM) && !defined(__HIP_DEVICE_COMPILE__)
-template <typename T> inline const T &min(const T &a, const T &b) {
-    return std::min(a, b);
+// device spelling). ROCm 7.2's Clang does not expose those CUDA builtins in
+// either pass, so keep the compatibility overloads in the global namespace
+// where hipify expects to find them. CUDA is unaffected (USE_ROCM undefined).
+#if defined(USE_ROCM)
+template <typename T, typename U>
+__host__ __device__ constexpr auto min(T a, U b) {
+    return b < a ? b : a;
 }
-template <typename T> inline const T &max(const T &a, const T &b) {
-    return std::max(a, b);
+template <typename T, typename U>
+__host__ __device__ constexpr auto max(T a, U b) {
+    return a < b ? b : a;
 }
 #endif
 
@@ -110,6 +110,24 @@ __host__ __device__ inline float ceil(float x)
 __host__ __device__ inline float ceilf(float x)
 {
     return __builtin_ceilf(x);
+}
+
+__host__ __device__ inline float atan2f(float y, float x)
+{
+    return __builtin_atan2f(y, x);
+}
+
+__device__ inline float gsplat_divide_rn(float numerator, float denominator)
+{
+    // A named wrapper avoids the CUDA-only __fdiv_rn intrinsic. Keep this one
+    // division precise even when a caller explicitly opts into FAST_MATH=1.
+#pragma clang fp reciprocal(off)
+    return numerator / denominator;
+}
+#else
+__device__ inline float gsplat_divide_rn(float numerator, float denominator)
+{
+    return __fdiv_rn(numerator, denominator);
 }
 #endif
 
