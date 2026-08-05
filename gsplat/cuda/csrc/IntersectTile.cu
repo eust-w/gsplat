@@ -38,6 +38,16 @@ namespace gsplat {
 
 namespace cg = cooperative_groups;
 
+inline __host__ __device__ uint32_t bit_width_u32(uint32_t value)
+{
+    uint32_t bits = 0;
+    do {
+        ++bits;
+        value >>= 1;
+    } while (value != 0);
+    return bits;
+}
+
 // ============================================================
 // SNUGBOX + AccuTile helper functions
 // (ported from test_viewer/src/cuda/Intersect.cu)
@@ -329,8 +339,8 @@ void launch_intersect_tile_kernel(
     // Note: std::bit_width requires C++20
     // uint32_t tile_n_bits = std::bit_width(n_tiles);
     // uint32_t image_n_bits = std::bit_width(I);
-    uint32_t image_n_bits = (uint32_t)floor(log2(I)) + 1;
-    uint32_t tile_n_bits = (uint32_t)floor(log2(n_tiles)) + 1;
+    uint32_t image_n_bits = bit_width_u32(I);
+    uint32_t tile_n_bits = bit_width_u32(n_tiles);
     // the first 32 bits are used for the image id and tile id altogether, so
     // check if we have enough bits for them.
     assert(image_n_bits + tile_n_bits <= 32);
@@ -410,7 +420,7 @@ __global__ void intersect_offset_kernel(
     if (idx >= n_isects)
         return;
 
-    uint32_t image_n_bits = (uint32_t)floor(log2f(float(I))) + 1;
+    uint32_t image_n_bits = bit_width_u32(I);
 
     int64_t isect_id_curr = isect_ids[idx] >> 32;
     int64_t iid_curr = isect_id_curr >> (tile_n_bits);
@@ -464,7 +474,7 @@ void launch_intersect_offset_kernel(
     }
 
     uint32_t n_tiles = tile_width * tile_height;
-    uint32_t tile_n_bits = (uint32_t)floor(log2(n_tiles)) + 1;
+    uint32_t tile_n_bits = bit_width_u32(n_tiles);
     intersect_offset_kernel<<<
         grid,
         threads,
